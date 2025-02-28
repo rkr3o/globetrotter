@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "rest_framework",
+    "apps.apps.GameConfig",
+    "corsheaders",
     
 ]
 
@@ -79,9 +81,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "recommendation",
+        "NAME": "assignment_db",
         "USER": "root",
-        "PASSWORD": "Ravi9934@",
+        "PASSWORD": "Ravi993454@",
         "HOST": "localhost",
         "PORT": "3306",
     }
