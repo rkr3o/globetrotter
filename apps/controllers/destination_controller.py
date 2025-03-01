@@ -3,6 +3,8 @@ from typing import Any
 from apps.db_manager.models import Destination, UserGameDetails
 from django.db.models import F
 
+from constants.constants_and_methods import RANDOM_DESTINATION, VALIDATE_DESTINATION
+
 class DestinationController:
     def __init__(self, data=None):
         self.data = data or {}
@@ -12,10 +14,12 @@ class DestinationController:
         self.result = {}
    
     def __call__(self, *args, **kwargs):
-        if self.action == "random_destination":
-            return self.get_random_destination()
-        elif self.action == "validate_answer":
-            return self.validate_answer(self.data.get("user_answer"), self.data.get("clues"))
+        actions = {
+            RANDOM_DESTINATION: self.get_random_destination,
+            VALIDATE_DESTINATION: lambda: self.validate_answer(self.data.get("user_answer"), self.data.get("clues")),
+        }
+        return actions.get(self.action, lambda: {})()
+
 
     def get_random_destination(self) -> Any:
         destinations = list(Destination.objects.all().values())
@@ -62,7 +66,6 @@ class DestinationController:
             if clue == dest["clues"]["clues"]:
                 correct_city = dest["city"]
                 break
-
 
         correct = correct_city.lower() == user_answer.lower()
         message = "🎉 Correct!" if correct else f"😢 Incorrect! The correct answer is {correct_city}."

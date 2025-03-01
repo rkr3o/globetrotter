@@ -15,7 +15,7 @@ from apps.db_manager.models import User
 
 def list_destinations():
     data = {
-        "action": "validate_answer",
+        "action": "validate_destination",
         "clues": ['Home to a giant clock tower that tourists love taking pictures of.', 'This city has a famous river running through it called the Thames.'],
         "user_answer": "Paris"
     }

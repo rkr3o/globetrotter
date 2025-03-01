@@ -7,9 +7,9 @@ from rest_framework import status
 
 class DestinationListView(APIView):
     def post(self, request):
-        ser = DestinationSerializer(request.data)
-        ser()
-        
+        ser = DestinationSerializer(data=request.data)
+        ser.is_valid()    
+            
         instance = DestinationController(request.data)
         instance()
         
