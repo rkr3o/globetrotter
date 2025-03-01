@@ -16,7 +16,7 @@ class DestinationController:
     def __call__(self, *args, **kwargs):
         actions = {
             RANDOM_DESTINATION: self.get_random_destination,
-            VALIDATE_DESTINATION: lambda: self.validate_answer(self.data.get("user_answer"), self.data.get("clues")),
+            VALIDATE_DESTINATION: lambda: self.validate_answer(self.data.get("user_answer"), self.data.get("clues"), self.data.get("clue_id")),
         }
         return actions.get(self.action, lambda: {})()
 
@@ -34,6 +34,7 @@ class DestinationController:
             # "city": destination["city"],  # Do not return this on frontend
             # "country": destination["country"],
             "clues": clues_sample,
+            "clue_id": destination["id"],
             "options": self.get_multiple_choice_options(destination["city"], destinations),
         }
     
@@ -59,11 +60,11 @@ class DestinationController:
         return obj.correct_score, obj.wrong_score
         
         
-    def validate_answer(self, user_answer, clue):
+    def validate_answer(self, user_answer, clue, clue_id):
         destinations = list(Destination.objects.all().values())  
         correct_city = ""
         for dest in destinations:
-            if clue == dest["clues"]["clues"]:
+            if clue_id == dest["id"]:
                 correct_city = dest["city"]
                 break
 

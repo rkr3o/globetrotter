@@ -7,12 +7,15 @@ from rest_framework import status
 
 class DestinationListView(APIView):
     def post(self, request):
-        ser = DestinationSerializer(data=request.data)
-        ser.is_valid()    
-            
-        instance = DestinationController(request.data)
+        # import pd b; pdb.set_trace()
+        
+        data = json.loads(request.body.decode("utf-8"))  # ✅ Parse JSON properly
+        
+        # ser = DestinationSerializer(data=data)  # ✅ Pass `data` instead of `request.data`
+        # ser.is_valid()    
+
+        instance = DestinationController(data)  # ✅ Pass `data`, not `request.data`
         instance()
         
-        response_data = json.loads(instance.result)
+        response_data = instance.result
         return Response(response_data, status=status.HTTP_200_OK)
-    
