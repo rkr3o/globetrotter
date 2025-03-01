@@ -10,12 +10,18 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 django.setup()
 
+from apps.controllers.destination_controller import DestinationController
 from apps.db_manager.models import User
 
 def list_destinations():
-    destinations = User.objects.all()
-    for dest in destinations:
-        print(dest.name)
+    data = {
+        "action": "validate_answer",
+        "clues": ['Home to a giant clock tower that tourists love taking pictures of.', 'This city has a famous river running through it called the Thames.'],
+        "user_answer": "Paris"
+    }
+    x = DestinationController(data) 
+    x()
+    print(x.result)
 
 if __name__ == "__main__":
     list_destinations()
