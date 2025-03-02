@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Confetti from "react-confetti";
 
-const API_URL = "http://localhost:8000/api/destinations";
+const API_URL = "http://localhost:8000/api";
 
 function App() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [isRegistered, setIsRegistered] = useState(false);
   const [question, setQuestion] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [feedback, setFeedback] = useState("");
@@ -15,69 +20,68 @@ function App() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSadFace, setShowSadFace] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [inviteLink, setInviteLink] = useState(null);
 
   useEffect(() => {
-    fetchQuestion();
-  }, []);
+    if (isRegistered) {
+      fetchQuestion();
+    }
+  }, [isRegistered]);
+
+  const registerUser = async () => {
+    if (!name.trim() || !email.trim() || !password.trim()) return alert("Please enter all details.");
+    try {
+      const response = await axios.post(`${API_URL}/users/register`, { name, email, password });
+      setUserId(response.data.user_id);
+      setIsRegistered(true);
+      fetchQuestion();
+    } catch (error) {
+      console.error("Error registering user:", error);
+    }
+  };
 
   const fetchQuestion = async () => {
     setLoading(true);
-    setQuestion(null); // Clear previous question while loading a new one
-    setSelectedAnswer(null);
+    setSelectedAnswer(null); // Reset answer selection for new question
     setFeedback("");
     setFunFact("");
     setShowConfetti(false);
     setShowSadFace(false);
-    setNextButtonText("🔄 Next Question");
-
-    const controller = new AbortController(); // Abort previous API calls
-    const signal = controller.signal;
 
     try {
-      const response = await axios.post(
-        API_URL,
-        {
-          category: "travel",
-          difficulty: "easy",
-          user_id: "2344",
-          action: "random_destination",
-        },
-        { signal }
-      );
-
+      const response = await axios.post(`${API_URL}/destinations`, {
+        category: "travel",
+        difficulty: "easy",
+        user_id: userId,
+        action: "random_destination",
+      });
       setQuestion(response.data);
     } catch (error) {
-      if (axios.isCancel(error)) {
-        console.log("Request canceled:", error.message);
-      } else {
-        console.error("Error fetching question:", error);
-      }
+      console.error("Error fetching question:", error);
     } finally {
       setLoading(false);
     }
-
-    return () => controller.abort(); // Cleanup on unmount
   };
 
   const handleAnswer = async (answer) => {
-    if (!question || selectedAnswer !== null) return; // Prevent multiple submissions
+    if (!question || selectedAnswer !== null) return;
     setSelectedAnswer(answer);
 
     try {
-      const validationResponse = await axios.post(API_URL, {
+      const response = await axios.post(`${API_URL}/destinations`, {
         action: "validate_destination",
         clue_id: question.clue_id,
         clues: question.clues,
         user_answer: answer,
+        user_id: userId,
       });
 
-      const { correct, message, fun_fact, correct_count, wrong_count, next_button } = validationResponse.data;
+      const { correct, message, fun_fact, correct_count, wrong_count } = response.data;
 
       setFeedback(message);
       setFunFact(fun_fact);
       setCorrectCount(correct_count);
       setWrongCount(wrong_count);
-      setNextButtonText(next_button);
 
       if (correct) {
         setShowConfetti(true);
@@ -90,35 +94,68 @@ function App() {
     }
   };
 
+  const gameRegister = async () => {
+    try {
+      await axios.post(`${API_URL}/users/game-register`, { user_id: userId });
+      alert("Game registration successful! You can now challenge friends.");
+    } catch (error) {
+      console.error("Error in game registration:", error);
+    }
+  };
+
+  const generateInviteLink = () => {
+    const link = `${window.location.origin}/play?invite=${userId}&score=${correctCount}`;
+    setInviteLink(link);
+  };
+
+  const shareInvite = () => {
+    if (!inviteLink) generateInviteLink();
+    window.open(`https://wa.me/?text=Join%20me%20in%20this%20Travel%20Quiz!%20Check%20my%20score%3A%20${correctCount}.%20Click%20to%20play:%20${inviteLink}`, '_blank');
+  };
+
   return (
     <div className="quiz-container">
-      <h1>🌍 Travel Quiz</h1>
-      {showConfetti && <Confetti />}
-      {loading ? (
-        <p>Loading question...</p>
-      ) : question ? (
-        <>
-          <p><strong>Clues:</strong> {question.clues.join(" | ")}</p>
-          <div className="options">
-            {question.options.map((option) => (
-              <button
-                key={option}
-                className={`option-btn ${selectedAnswer === option ? "selected" : ""}`}
-                onClick={() => handleAnswer(option)}
-                disabled={selectedAnswer !== null}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-          {feedback && <p className="feedback">{feedback}</p>}
-          {showSadFace && <p className="sad-face">😢</p>}
-          {funFact && <p className="fun-fact">💡 {funFact}</p>}
-          <p>✅ Correct: {correctCount} | ❌ Wrong: {wrongCount}</p>
-          <button className="next-btn" onClick={fetchQuestion}>{nextButtonText}</button>
-        </>
+      {!isRegistered ? (
+        <div>
+          <h1>🌍 Travel Quiz</h1>
+          <input type="text" placeholder="Enter Name" value={name} onChange={(e) => setName(e.target.value)} />
+          <input type="email" placeholder="Enter Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input type="password" placeholder="Enter Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <button onClick={registerUser}>Register & Start Game</button>
+        </div>
       ) : (
-        <p>Error loading question. Please try again.</p>
+        <>
+          <h1>🌍 Travel Quiz</h1>
+          <button className="game-register-btn" onClick={gameRegister}>🎮 Register for Game</button>
+          <button className="invite-btn" onClick={shareInvite}>📨 Challenge a Friend</button>
+          {showConfetti && <Confetti />}
+          {loading ? (
+            <p>Loading question...</p>
+          ) : question ? (
+            <>
+              <p><strong>Clues:</strong> {question.clues.join(" | ")}</p>
+              <div className="options">
+                {question.options.map((option) => (
+                  <button
+                    key={option}
+                    className={`option-btn ${selectedAnswer === option ? "selected" : ""}`}
+                    onClick={() => handleAnswer(option)}
+                    disabled={selectedAnswer !== null}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+              {feedback && <p className="feedback">{feedback}</p>}
+              {showSadFace && <p className="sad-face">😢</p>}
+              {funFact && <p className="fun-fact">💡 {funFact}</p>}
+              <p>✅ Correct: {correctCount} | ❌ Wrong: {wrongCount}</p>
+              <button className="next-btn" onClick={fetchQuestion}>{nextButtonText}</button>
+            </>
+          ) : (
+            <p>Error loading question. Please try again.</p>
+          )}
+        </>
       )}
     </div>
   );
