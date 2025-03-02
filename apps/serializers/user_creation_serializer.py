@@ -15,10 +15,9 @@ class UserGameRegisterSerializer(serializers.BaseSerializer):
         if not data:
             raise_error(1, "No data provided", 400)
         
-        if not data.get("username"):
+        if not data.get("user_id"):
             raise_error(3, "user_id is missing", 400)
             
-        data["user_id"] = data["username"]
     
     def to_representation(self, instance):
         return {}

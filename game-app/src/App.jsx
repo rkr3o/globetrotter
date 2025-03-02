@@ -21,6 +21,7 @@ function App() {
   const [showSadFace, setShowSadFace] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
+  const [inviteImage, setInviteImage] = useState("");
 
   useEffect(() => {
     if (isRegistered) {
@@ -101,8 +102,9 @@ function App() {
       await axios.post(`${API_URL}/users/game-register`, { user_id: friendUserId });
       alert("Friend has been registered for the game!");
       generateInviteLink();
+      generateInviteImage();
       setTimeout(() => {
-        window.open(`https://wa.me/?text=Join%20me%20in%20this%20Travel%20Quiz!%20Check%20my%20score%3A%20${correctCount}.%20Click%20to%20play:%20${inviteLink}`, '_blank');
+        window.open(`https://wa.me/?text=Join%20me%20in%20this%20Travel%20Quiz!%20Check%20my%20score%3A%20${correctCount}.%20Click%20to%20play:%20${inviteLink}%20&media=${inviteImage}`, '_blank');
       }, 1000);
     } catch (error) {
       console.error("Error registering friend:", error);
@@ -114,6 +116,11 @@ function App() {
     if (!userId) return;
     const link = `${window.location.origin}/play?invite=${userId}&score=${correctCount}`;
     setInviteLink(link);
+  };
+
+  const generateInviteImage = () => {
+    const imageUrl = `${API_URL}/generate-invite-image?user_id=${userId}&score=${correctCount}`;
+    setInviteImage(imageUrl);
   };
 
   return (
