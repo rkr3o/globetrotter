@@ -20,7 +20,7 @@ function App() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showSadFace, setShowSadFace] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [inviteLink, setInviteLink] = useState(null);
+  const [inviteLink, setInviteLink] = useState("");
 
   useEffect(() => {
     if (isRegistered) {
@@ -42,7 +42,7 @@ function App() {
 
   const fetchQuestion = async () => {
     setLoading(true);
-    setSelectedAnswer(null); // Reset answer selection for new question
+    setSelectedAnswer(null);
     setFeedback("");
     setFunFact("");
     setShowConfetti(false);
@@ -94,23 +94,26 @@ function App() {
     }
   };
 
-  const gameRegister = async () => {
+  const challengeFriend = async () => {
+    const friendUserId = prompt("Enter your friend's user ID:");
+    if (!friendUserId) return;
     try {
-      await axios.post(`${API_URL}/users/game-register`, { user_id: userId });
-      alert("Game registration successful! You can now challenge friends.");
+      await axios.post(`${API_URL}/users/game-register`, { user_id: friendUserId });
+      alert("Friend has been registered for the game!");
+      generateInviteLink();
+      setTimeout(() => {
+        window.open(`https://wa.me/?text=Join%20me%20in%20this%20Travel%20Quiz!%20Check%20my%20score%3A%20${correctCount}.%20Click%20to%20play:%20${inviteLink}`, '_blank');
+      }, 1000);
     } catch (error) {
-      console.error("Error in game registration:", error);
+      console.error("Error registering friend:", error);
+      alert("Failed to register friend. Try again.");
     }
   };
 
   const generateInviteLink = () => {
+    if (!userId) return;
     const link = `${window.location.origin}/play?invite=${userId}&score=${correctCount}`;
     setInviteLink(link);
-  };
-
-  const shareInvite = () => {
-    if (!inviteLink) generateInviteLink();
-    window.open(`https://wa.me/?text=Join%20me%20in%20this%20Travel%20Quiz!%20Check%20my%20score%3A%20${correctCount}.%20Click%20to%20play:%20${inviteLink}`, '_blank');
   };
 
   return (
@@ -126,8 +129,7 @@ function App() {
       ) : (
         <>
           <h1>🌍 Travel Quiz</h1>
-          <button className="game-register-btn" onClick={gameRegister}>🎮 Register for Game</button>
-          <button className="invite-btn" onClick={shareInvite}>📨 Challenge a Friend</button>
+          <button className="game-register-btn" onClick={challengeFriend}>📨 Challenge a Friend</button>
           {showConfetti && <Confetti />}
           {loading ? (
             <p>Loading question...</p>
