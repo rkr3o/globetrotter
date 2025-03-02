@@ -5,11 +5,11 @@ from django.db.models import F
 
 from constants.constants_and_methods import RANDOM_DESTINATION, VALIDATE_DESTINATION, raise_error
 
-class UserCreationController:
+class UserGameCreationController:
     def __init__(self, data=None):
         self.data = data or {}
         self.action = self.data.get("action")
-        self.user_id = 12345  
+        self.user_id = self.data.get("user_id")  
         self.result = {}
 
     def __call__(self, *args, **kwargs):
@@ -23,6 +23,6 @@ class UserCreationController:
     def update_or_create_user(self):
         self.user_game_obj, created = UserGameDetails.objects.get_or_create(user_id=self.user_id)
         if created:
-            print("✅ New user created successfully!")
+            print("New user created successfully!")
         else:
-            print("ℹ️ User already exists, skipping creation.")
+            print("User already exists, skipping creation.")

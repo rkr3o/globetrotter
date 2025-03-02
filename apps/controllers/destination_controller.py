@@ -9,7 +9,7 @@ class DestinationController:
     def __init__(self, data=None):
         self.data = data or {}
         self.action = self.data.get("action")
-        self.user_id = 12345
+        self.user_id = self.data.get("user_id")
         self.user_game_obj,err = UserGameDetails.objects.filter(user_id=self.user_id).get_or_create(user_id=self.user_id)
         self.result = {}
    
@@ -31,8 +31,6 @@ class DestinationController:
         clues_sample = random.sample(clues, min(2, len(clues)))
 
         self.result =  {
-            # "city": destination["city"],  # Do not return this on frontend
-            # "country": destination["country"],
             "clues": clues_sample,
             "clue_id": destination["id"],
             "options": self.get_multiple_choice_options(destination["city"], destinations),
